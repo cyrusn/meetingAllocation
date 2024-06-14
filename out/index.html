@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      http-equiv="Cache-Control"
+      content="no-cache, no-store, must-revalidate"
+    />
+    <meta http-equiv="Expires" content="0" />
+    <title>Meeting Schedule</title>
+    <link rel="shortcut icon" href="#" />
+    <script
+      defer
+      src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"
+    ></script>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css"
+    />
+  </head>
+
+  <body x-data="documentData" class="my-4">
+    <div class="container is-widescreen px-3">
+      <nav
+        class="navbar is-fixed-top px-3"
+        role="navigation"
+        aria-label="main navigation"
+      >
+        <div class="navbar-brand">
+          <div class="navbar-item">
+            <h1 class="title" x-text="title"></h1>
+          </div>
+
+          <button
+            role="button"
+            class="navbar-burger"
+            aria-label="menu"
+            aria-expanded="false"
+            data-target="navbarBasicExample"
+            :class='isActive && "is-active" '
+            @click="isActive=!isActive"
+          >
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+          </button>
+        </div>
+        <div
+          id="navbarBasicExample"
+          class="navbar-menu"
+          :class='isActive && "is-active" '
+        >
+          <div class="navbar-start">
+            <div class="navbar-item">
+              <input
+                class="input"
+                type="text"
+                placeholder="Filter by Initial"
+                x-model.debounce="filter"
+                autofocus
+              />
+            </div>
+          </div>
+          <div class="navbar-end">
+            <div class="navbar-item">
+              <div class="field is-grouped is-grouped-multiline">
+                <div class="control">
+                  <div class="tags has-addons">
+                    <span class="tag is-dark">no. of meetings</span>
+                    <span class="tag is-info" x-text="meetings.length"></span>
+                  </div>
+                </div>
+
+                <div class="control">
+                  <div class="tags has-addons">
+                    <span class="tag is-dark">timestamp</span>
+                    <span class="tag is-success" x-text="timestamp"></span>
+                  </div>
+                </div>
+
+                <div class="control">
+                  <div class="tags has-addons">
+                    <span class="tag is-dark">version</span>
+                    <span class="tag is-danger" x-text="version"></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <html class="has-navbar-fixed-top">
+        <template x-if="updatedMeetings.length">
+          <div class="message is-info">
+            <div class="message-header">
+              <h2>Updates in this version</h2>
+            </div>
+            <div class="message-body">
+              <template x-for="m in updatedMeetings">
+                <span class="tags has-addons my-1">
+                  <span
+                    class="tag is-dark"
+                    x-text="`${m.cname} (${m.name})`"
+                  ></span>
+                  <template x-if="m.previousSlot">
+                    <span class="tag is-warning">
+                      <strike
+                        x-text="new Date(m.previousSlot).toLocaleString()"
+                      ></strike>
+                    </span>
+                  </template>
+                  <template x-if="m.newSlot">
+                    <span
+                      class="tag is-success"
+                      x-text="new Date(m.newSlot).toLocaleString()"
+                    ></span>
+                  </template>
+                  <template x-if="m.remark">
+                    <span class="tag is-danger is-light" x-text="m.remark"></span>
+                  </template>
+                </span>
+              </template>
+            </div>
+          </div>
+        </template>
+
+        <div x-html="table"></div>
+      </html>
+    </div>
+  </body>
+  <script src="./alpine.js"></script>
+</html>
