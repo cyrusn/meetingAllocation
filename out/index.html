@@ -20,115 +20,103 @@
     />
   </head>
 
-  <body x-data="documentData" class="my-4">
-    <div class="container is-widescreen px-3">
-      <nav
-        class="navbar is-fixed-top px-3"
-        role="navigation"
-        aria-label="main navigation"
-      >
-        <div class="navbar-brand">
-          <div class="navbar-item">
-            <h1 class="title" x-text="title"></h1>
-          </div>
-
-          <button
-            role="button"
-            class="navbar-burger"
-            aria-label="menu"
-            aria-expanded="false"
-            data-target="navbarBasicExample"
-            :class='isActive && "is-active" '
-            @click="isActive=!isActive"
-          >
-            <span aria-hidden="true"></span>
-            <span aria-hidden="true"></span>
-            <span aria-hidden="true"></span>
-          </button>
-        </div>
-        <div
-          id="navbarBasicExample"
-          class="navbar-menu"
-          :class='isActive && "is-active" '
-        >
-          <div class="navbar-start">
-            <div class="navbar-item">
-              <input
-                class="input"
-                type="text"
-                placeholder="Filter by Initial"
-                x-model.debounce="filter"
-                autofocus
-              />
-            </div>
-          </div>
-          <div class="navbar-end">
-            <div class="navbar-item">
-              <div class="field is-grouped is-grouped-multiline">
-                <div class="control">
-                  <div class="tags has-addons">
-                    <span class="tag is-dark">no. of meetings</span>
-                    <span class="tag is-info" x-text="meetings.length"></span>
-                  </div>
-                </div>
-
-                <div class="control">
-                  <div class="tags has-addons">
-                    <span class="tag is-dark">timestamp</span>
-                    <span class="tag is-success" x-text="timestamp"></span>
-                  </div>
-                </div>
-
-                <div class="control">
-                  <div class="tags has-addons">
-                    <span class="tag is-dark">version</span>
-                    <span class="tag is-danger" x-text="version"></span>
-                  </div>
-                </div>
-              </div>
-            </div>
+  <body x-data="documentData">
+    <div class="container is-widescreen pt-4 px-1">
+      <div class="is-flex is-justify-content-center">
+        <img src="./logo.png" class="image" />
+      </div>
+      <h1
+        class="title is-size-3-desktop is-size-5-mobile has-text-centered mt-4"
+        x-text="title"
+      ></h1>
+      <div class="field horizontal">
+        <div class="field-body">
+          <div class="field">
+            <input
+              class="input"
+              type="text"
+              placeholder="Filter by Initial"
+              x-model.debounce="filter"
+              autofocus
+            />
           </div>
         </div>
-      </nav>
+      </div>
 
-      <html class="has-navbar-fixed-top">
-        <template x-if="updatedMeetings.length">
-          <div class="message is-info">
-            <div class="message-header">
-              <h2>Updates in this version</h2>
-            </div>
-            <div class="message-body">
-              <template x-for="m in updatedMeetings">
-                <span class="tags has-addons my-1">
+      <div class="field is-grouped is-grouped-multiline">
+        <div class="control">
+          <div class="tags has-addons">
+            <span class="tag is-dark">no. of meetings</span>
+            <span class="tag is-info" x-text="meetings.length"></span>
+          </div>
+        </div>
+
+        <div class="control">
+          <div class="tags has-addons">
+            <span class="tag is-dark">timestamp</span>
+            <span class="tag is-success" x-text="timestamp"></span>
+          </div>
+        </div>
+
+        <div class="control">
+          <div class="tags has-addons">
+            <span class="tag is-dark">version</span>
+            <span class="tag is-danger" x-text="version"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="checkbox">
+          <input
+            type="checkbox"
+            @click="isShowFutureMeetings = !isShowFutureMeetings"
+          />
+          Show All Meetings / Future Meetings
+        </label>
+      </div>
+      <div class="field">
+        <label class="checkbox">
+          <input type="checkbox" @click="isShowUpdates=!isShowUpdates" />
+          Show Updates Log
+        </label>
+      </div>
+
+      <template x-if="updatedMeetings.length && isShowUpdates">
+        <div class="message is-info">
+          <div class="message-header">
+            <h2>Updates in this version</h2>
+          </div>
+          <div class="message-body">
+            <template x-for="m in updatedMeetings">
+              <div class="">
+                <h1 class="h3" x-text="`${m.cname} (${m.name})`"></h1>
+                <template x-if="m.previousSlot">
+                  <span class="tag is-warning">
+                    <strike
+                      x-text="new Date(m.previousSlot).toLocaleString()"
+                    ></strike>
+                  </span>
+                </template>
+                <template x-if="m.newSlot">
                   <span
-                    class="tag is-dark"
-                    x-text="`${m.cname} (${m.name})`"
+                    class="tag is-success"
+                    x-text="new Date(m.newSlot).toLocaleString()"
                   ></span>
-                  <template x-if="m.previousSlot">
-                    <span class="tag is-warning">
-                      <strike
-                        x-text="new Date(m.previousSlot).toLocaleString()"
-                      ></strike>
-                    </span>
-                  </template>
-                  <template x-if="m.newSlot">
-                    <span
-                      class="tag is-success"
-                      x-text="new Date(m.newSlot).toLocaleString()"
-                    ></span>
-                  </template>
-                  <template x-if="m.remark">
-                    <span class="tag is-danger is-light" x-text="m.remark"></span>
-                  </template>
-                </span>
-              </template>
-            </div>
+                </template>
+                <template x-if="m.remark">
+                  <span class="tag is-danger is-light" x-text="m.remark"></span>
+                </template>
+              </div>
+            </template>
           </div>
-        </template>
+        </div>
+      </template>
 
+      <div class="table-container">
         <div x-html="table"></div>
-      </html>
+      </div>
     </div>
   </body>
-  <script src="./alpine.js"></script>
+  <script src="./alpine.js?v=0.0.1"></script>
 </html>
