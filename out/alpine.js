@@ -69,6 +69,7 @@ document.addEventListener("alpine:init", () => {
       return data
         .filter(({ slot }) => {
           if (!isShowFutureMeetings) {
+            // show events after 3 * 60 * 60 * 1000
             return new Date(slot) - now > -10800000;
           }
           return true

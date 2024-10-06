@@ -163,27 +163,30 @@ function checkParticipantsAvailability({
 }
 
 function findDiffs(data, path) {
-  const file = require(path);
-  const diffs = [];
+  try {
+    const file = require(path);
+    const diffs = [];
 
-  if (!file) return diffs;
+    data.forEach((meeting, index) => {
+      const found = file.data.find((m) => m.name === meeting.name);
+      if (!found) return;
 
-  data.forEach((meeting, index) => {
-    const found = file.data.find((m) => m.name === meeting.name);
-    if (!found) return;
+      if (meeting.slot !== found.slot) {
+        const { name, cname, slot } = meeting;
+        diffs.push({
+          name,
+          cname,
+          newSlot: slot,
+          previousSlot: found.slot,
+        });
+      }
+    });
 
-    if (!_.isEqual(meeting, found)) {
-      const { name, cname, slot } = meeting;
-      diffs.push({
-        name,
-        cname,
-        newSlot: slot,
-        previousSlot: found.slot,
-      });
-    }
-  });
-
-  return diffs;
+    return diffs;
+  } catch (e) {
+    console.error(e);
+    return [];
+  }
 }
 
 module.exports = {
