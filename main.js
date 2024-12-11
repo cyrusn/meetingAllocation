@@ -1,9 +1,9 @@
 // settings
 
-const lastVersion = "v0.0.0";
-const version = "v0.0.0";
-const baseDataPath = "../data/2024-25_First";
-const TITLE = "2024-25 1st Meeting Schedule";
+const lastVersion = 'v0.0.1'
+const version = 'v0.0.2'
+const baseDataPath = '../data/2024-25_Second'
+const TITLE = '2024-25 2nd Meeting Schedule'
 
 // imports
 const fs = require('fs')
@@ -13,7 +13,8 @@ const {
   mergePrincipalsToMeetings,
   checkParticipantsAvailability,
   checkPrefilledMeetings,
-  findDiffs
+  findDiffs,
+  flattenTeachers
 } = require('./helpers.js')
 
 // output files
@@ -40,39 +41,7 @@ const withPrincipalsMeetings = mergePrincipalsToMeetings(
 
 checkPrefilledMeetings(prefilledMeetings, withPrincipalsMeetings)
 
-// flatten unavailableArrays. Flatten teachers key to teacher.
-// e.g. { teacher: "teacher1", start: "2021-01-01T08:00:00.000Z", end: "2021-01-01T09:00:00.000Z" }
-const flattenedUnavailables = unavailableArrays
-  .reduce((prev, curr) => {
-    if ('teachers' in curr) {
-      const { teachers } = curr
-      delete curr.teachers
-
-      const flatten = teachers.map((t) =>
-        Object.assign({}, { teacher: t }, curr)
-      )
-      prev = prev.concat(flatten)
-      return prev
-    }
-
-    prev.push(curr)
-    return prev
-  }, [])
-  .reduce((prev, curr) => {
-    if ('slots' in curr) {
-      const { slots, teacher } = curr
-      delete curr.slots
-      const flatten = slots.map((s) => ({
-        teacher,
-        start: s.start,
-        end: s.end
-      }))
-      prev = prev.concat(flatten)
-      return prev
-    }
-    prev.push(curr)
-    return prev
-  }, [])
+const flattenedUnavailables = flattenTeachers(unavailableArrays)
 
 // convert unavailableArrays to unavailables Object with teacher as key
 const unavailables = _.groupBy(flattenedUnavailables, 'teacher')
@@ -251,6 +220,7 @@ const notAssignedMeetings = _.xor(
   assignedSlots.map(({ name }) => name),
   meetings.map(({ name }) => name)
 )
+
 withPrincipalsMeetings
   .filter(({ name }) => notAssignedMeetings.includes(name))
   .forEach(({ name, participants, rank }) =>

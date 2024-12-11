@@ -7,7 +7,7 @@
     "lodash": "^4.17.21",
     "luxon": "^3.3.0"
   },
-  "script": {
+  "scripts": {
     "build": "node main.js"
   },
   "eslintConfig": {
