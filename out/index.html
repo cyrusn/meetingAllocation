@@ -1,5 +1,9 @@
 <!doctype html>
-<html lang="en">
+<html
+  lang="en"
+  x-data="documentData"
+  :class='isLightTheme ? "theme-light" : "theme-dark"'
+>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -14,21 +18,28 @@
       defer
       src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"
     ></script>
+    <script src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
     <link
       rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css"
+      href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css"
     />
   </head>
 
-  <body x-data="documentData">
+  <body>
     <div class="container is-widescreen pt-4 px-1">
       <div class="is-flex is-justify-content-center">
-        <img src="./logo.png" class="image" />
+        <template x-if="isLightTheme">
+          <img src="./logo.png" class="image" />
+        </template>
+        <template x-if="!isLightTheme">
+          <img src="./logo_dark.png" class="image" />
+        </template>
       </div>
       <h1
         class="title is-size-3-desktop is-size-5-mobile has-text-centered mt-4"
         x-text="title"
       ></h1>
+
       <div class="field horizontal">
         <div class="field-body">
           <div class="field">
@@ -62,6 +73,24 @@
           <div class="tags has-addons">
             <span class="tag is-dark">version</span>
             <span class="tag is-danger" x-text="version"></span>
+          </div>
+        </div>
+
+        <div class="control">
+          <div class="tags has-addons">
+            <span class="tag is-dark">Theme</span>
+            <button class="tag" @click="toggleTheme">
+              <template x-if="isLightTheme">
+                <span class="icon has-text-warning">
+                  <i class="fas fa-sun"></i>
+                </span>
+              </template>
+              <template x-if="!isLightTheme">
+                <span class="icon has-text-link">
+                  <i class="fas fa-moon"></i>
+                </span>
+              </template>
+            </button>
           </div>
         </div>
       </div>
