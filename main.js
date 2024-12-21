@@ -1,14 +1,10 @@
 // settings
+require('dotenv').config()
 
-const lastVersion = 'v0.0.1'
-const version = 'v0.0.2'
-const baseDataPath = '../data/2024-25_Second'
-const TITLE = '2024-25 2nd Meeting Schedule'
-
-// imports
 const fs = require('fs')
 const _ = require('lodash')
 const { DateTime, Duration, Interval } = require('luxon')
+
 const {
   mergePrincipalsToMeetings,
   checkParticipantsAvailability,
@@ -17,18 +13,23 @@ const {
   flattenTeachers
 } = require('./helpers.js')
 
+const COMPARE_VERSION = process.env['COMPARE_VERSION']
+const VERSION = process.env['VERSION']
+const BASE_DATA_PATH = process.env['BASE_DATA_PATH']
+const TITLE = process.env['TITLE']
+
 // output files
-const outputFilePath = `./out/result.${version}.json`
-const lastOutputFilePath = `./out/result.${lastVersion}.json`
+const outputFilePath = `./out/result.${VERSION}.json`
+const lastOutputFilePath = `./out/result.${COMPARE_VERSION}.json`
 
 // load data
-const slots = require(baseDataPath + '/slots.json')
-const meetings = require(baseDataPath + '/meetings.json')
-const principalsMeetings = require(baseDataPath + '/principals.json')
-const prefilledMeetings = require(baseDataPath + '/prefilledMeetings.json')
-const unavailableArrays = require(baseDataPath + '/unavailables.json')
-const locations = require(baseDataPath + '/locations.json')
-const orders = require(baseDataPath + '/orders.json')
+const slots = require(BASE_DATA_PATH + '/slots.json')
+const meetings = require(BASE_DATA_PATH + '/meetings.json')
+const principalsMeetings = require(BASE_DATA_PATH + '/principals.json')
+const prefilledMeetings = require(BASE_DATA_PATH + '/prefilledMeetings.json')
+const unavailableArrays = require(BASE_DATA_PATH + '/unavailables.json')
+const locations = require(BASE_DATA_PATH + '/locations.json')
+const orders = require(BASE_DATA_PATH + '/orders.json')
 const assignedSlots = []
 const g10Capacity = 6
 
@@ -39,7 +40,12 @@ const withPrincipalsMeetings = mergePrincipalsToMeetings(
   orders
 )
 
-checkPrefilledMeetings(prefilledMeetings, withPrincipalsMeetings)
+checkPrefilledMeetings(
+  prefilledMeetings.filter((obj) => {
+    if (obj['_comment']) return false
+  }),
+  withPrincipalsMeetings
+)
 
 const flattenedUnavailables = flattenTeachers(unavailableArrays)
 
@@ -202,7 +208,7 @@ fs.writeFileSync(
   outputFilePath,
   JSON.stringify(
     {
-      version,
+      version: VERSION,
       title: TITLE,
       timestamp,
       updatedMeetings,
