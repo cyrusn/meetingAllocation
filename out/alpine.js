@@ -1,3 +1,4 @@
+const version = 'v0.0.0'
 const FILENAME = `result.${version}.json`
 
 const groupBy = function (xs, key) {
@@ -9,11 +10,15 @@ const groupBy = function (xs, key) {
 
 document.addEventListener('alpine:init', () => {
   Alpine.data('documentData', () => ({
+    isLightTheme: false,
     isShowUpdates: false,
     isActive: false,
     isShowFutureMeetings: false,
     filter: '',
     meetingData: null,
+    toggleTheme() {
+      this.isLightTheme = !this.isLightTheme
+    },
     fetchMeetingData() {
       const filename = FILENAME
       fetch(`${filename}?nocache=${new Date().getTime()}`)
@@ -134,11 +139,10 @@ document.addEventListener('alpine:init', () => {
   <td>${cname}<br>${name}${remark ? '<p class="help is-info">' + remark + '</p>' : ''}</td>
   <td>${location}</td> <td>${duration}hrs</td>
   <td width='40%'> 
-    <span class='has-text-danger'
-      >${principals.filter((p) => !pics.includes(p)).join(', ')}</span
-      >${principals.filter((p) => !pics.includes(p)).length ? ', ' : ''}<span 
-      class='has-text-info'>${pics.join(', ')}</span>${pics.length ? ', ' : ''}<span
-      >${members.filter((m) => ![...principals, ...pics].includes(m)).join(', ')}</span>
+    <span class='has-text-danger'> ${principals.filter((p) => !pics.includes(p)).join(', ')}</span >
+${principals.filter((p) => !pics.includes(p)).length ? ', ' : ''}
+<span class='has-text-info'> ${pics.join(', ')}</span>${members.length ? ', ' : ''}
+<span> ${members.filter((m) => ![...principals, ...pics].includes(m)).join(', ')}</span>
   </td>`
           })
           return `<td rowspan="${timeRowspan}">${time.slice(0, 5)}
