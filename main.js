@@ -1,10 +1,10 @@
 // settings
 require('dotenv').config()
+const { getSheetData } = require('./googleSheet.js')
 
 const fs = require('fs')
 const _ = require('lodash')
 const { DateTime, Duration, Interval } = require('luxon')
-const csv = require('csvtojson')
 
 const {
   mergePrincipalsToMeetings,
@@ -18,18 +18,11 @@ const COMPARE_VERSION = process.env['COMPARE_VERSION']
 const VERSION = process.env['VERSION']
 const BASE_DATA_PATH = process.env['BASE_DATA_PATH']
 const TITLE = process.env['TITLE']
+const SPREADSHEET_ID = process.env['SPREADSHEET_ID']
 
 // output files
 const outputFilePath = `./out/result.${VERSION}.json`
 const lastOutputFilePath = `./out/result.${COMPARE_VERSION}.json`
-
-async function getDataFromCSV(path) {
-  const json = await csv({
-    ignoreEmpty: true,
-    nullObject: true
-  }).fromFile(path)
-  return json
-}
 
 const assignedSlots = []
 const g10Capacity = 6
@@ -37,12 +30,24 @@ const g10Capacity = 6
 const main = async () => {
   // JSON
   const slots = require(BASE_DATA_PATH + '/slots.json')
-  const principalsMeetings = require(BASE_DATA_PATH + '/principals.json')
   const locations = require(BASE_DATA_PATH + '/locations.json')
   const orders = require(BASE_DATA_PATH + '/orders.json')
 
   // CSV
-  const rawMeetings = await getDataFromCSV(BASE_DATA_PATH + '/meetings.csv')
+  const rawMeetings = await getSheetData(SPREADSHEET_ID, 'meetings!A:G')
+  const rawPrincipalMeetings = await getSheetData(
+    SPREADSHEET_ID,
+    'principals!A:G'
+  )
+  const principalsMeetings = rawPrincipalMeetings.map((m) => {
+    const { name, meetings } = m
+    return { name, meetings: meetings.split(',\n') }
+  })
+  const prefilledMeetings = await getSheetData(
+    SPREADSHEET_ID,
+    'prefilledMeetings!A:C'
+  )
+  const rawUnavailables = await getSheetData(SPREADSHEET_ID, 'unavailables!A:C')
 
   const meetings = rawMeetings.map((r) => {
     const { name, cname, pics, members, duration, location } = r
@@ -56,27 +61,20 @@ const main = async () => {
     }
   })
 
-  const prefilledMeetings = await getDataFromCSV(
-    BASE_DATA_PATH + '/prefilledMeetings.csv'
-  )
-
-  const rawUnavailables = await getDataFromCSV(
-    BASE_DATA_PATH + '/unavailables.csv'
-  )
-
   const unavailableArrays = rawUnavailables.map((r) => {
-    const { teachers, slots } = r
+    const { teachers, slots, remark } = r
     return {
       teachers: teachers.split(','),
       slots: slots
-        .replace('\n', '')
-        .replace(' ', '')
+        .replaceAll('\n', '')
+        .replaceAll(' ', '')
         .split(',')
         .map((slot) => {
           const [start, end] = slot.split('/')
           return {
             start,
-            end
+            end,
+            remark
           }
         })
     }
@@ -87,17 +85,16 @@ const main = async () => {
     orders
   )
 
+  const flattenedUnavailables = flattenTeachers(unavailableArrays)
+  const unavailables = _.groupBy(flattenedUnavailables, 'teacher')
+
   checkPrefilledMeetings(
-    prefilledMeetings.filter((obj) => {
-      if (obj['_comment']) return false
-    }),
-    withPrincipalsMeetings
+    prefilledMeetings,
+    withPrincipalsMeetings,
+    unavailables
   )
 
-  const flattenedUnavailables = flattenTeachers(unavailableArrays)
-
   // convert unavailableArrays to unavailables Object with teacher as key
-  const unavailables = _.groupBy(flattenedUnavailables, 'teacher')
 
   // assign prefilled meetings first
   for (const { name, slot } of prefilledMeetings.filter(({ slot }) => slot)) {
