@@ -58,7 +58,7 @@ function mergePrincipalsToMeetings(principalsMeetings, meetings, orders) {
     })
 }
 
-function checkPrefilledMeetings(prefilledMeetings, meetings) {
+function checkPrefilledMeetings(prefilledMeetings, meetings, unavailables) {
   const prefilledMeetingsWithParticipants = prefilledMeetings.map(
     (prefilledMeeting) => {
       const { name } = prefilledMeeting
@@ -82,25 +82,36 @@ function checkPrefilledMeetings(prefilledMeetings, meetings) {
     const intervalA = Interval.after(DateTime.fromISO(slot), formattedDurationA)
 
     return participants.forEach((participant) => {
+      const teacherUnavailableSlots = unavailables[participant]
+      if (teacherUnavailableSlots) {
+        teacherUnavailableSlots.forEach((unavailableSlot) => {
+          const { start, end } = unavailableSlot
+          const intervalC = Interval.fromISO(`${start}/${end}`)
+          if (intervalC.overlaps(intervalA)) {
+            console.error(name, participant, slot, unavailableSlot)
+            throw new Error(
+              'Prefilled meetings is not available for some teachers'
+            )
+          }
+        })
+      }
+
       const found = prefilledMeetingsWithParticipants.find((meeting) => {
-        return (
-          meeting.participants.includes(participant) && meeting.name != name
+        // meeting.participants.includes(participant) && meeting.name != name
+
+        const intervalB = Interval.after(
+          DateTime.fromISO(meeting.slot),
+          Duration.fromObject({
+            hours: meeting.duration
+          })
         )
+        return meeting.name !== name && intervalA.overlaps(intervalB)
       })
 
       if (found) {
-        const formattedDurationB = Duration.fromObject({
-          hours: found.duration
-        })
-        const intervalB = Interval.after(
-          DateTime.fromISO(found.slot),
-          formattedDurationB
-        )
-
-        if (intervalA.overlaps(intervalB)) {
-          const intersection = _.intersection(participants, found.participants)
-          console.log(name)
-          console.log(found.name)
+        const intersection = _.intersection(participants, found.participants)
+        if (intersection.length) {
+          console.log(name, 'vs', found.name)
           console.log(intersection)
           throw new Error('Prefilled meetings crashed')
         }
@@ -212,7 +223,8 @@ function flattenTeachers(unavailableArrays) {
         const flatten = slots.map((s) => ({
           teacher,
           start: s.start,
-          end: s.end
+          end: s.end,
+          remark: s.remark
         }))
         prev = prev.concat(flatten)
         return prev
