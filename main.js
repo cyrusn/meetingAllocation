@@ -1,6 +1,6 @@
 // settings
 require('dotenv').config()
-const { getSheetData } = require('./googleSheet.js')
+const { getSheetData, getSheetArray } = require('./googleSheet.js')
 
 const fs = require('fs')
 const _ = require('lodash')
@@ -29,10 +29,9 @@ const g10Capacity = 6
 
 const main = async () => {
   // JSON
-  const slots = require(BASE_DATA_PATH + '/slots.json')
-  const locations = require(BASE_DATA_PATH + '/locations.json')
-  const orders = require(BASE_DATA_PATH + '/orders.json')
-
+  const slots = await getSheetArray(SPREADSHEET_ID, 'slots!A:A')
+  const locations = await getSheetArray(SPREADSHEET_ID, 'locations!A:A')
+  const orders = await getSheetArray(SPREADSHEET_ID, 'orders!A:A')
   // CSV
   const rawMeetings = await getSheetData(SPREADSHEET_ID, 'meetings!A:G')
   const rawPrincipalMeetings = await getSheetData(
