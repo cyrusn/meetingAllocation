@@ -130,7 +130,7 @@
                 <template x-if="m.newSlot">
                   <span
                     class="tag is-success"
-                    x-text="new Date(m.newSlot).toLocaleString()"
+                    x-text="m.newSlot=='TBC'?'TBC': new Date(m.newSlot).toLocaleString()"
                   ></span>
                 </template>
                 <template x-if="m.remark">
@@ -147,5 +147,5 @@
       </div>
     </div>
   </body>
-  <script src="./alpine.js?v=0.0.2"></script>
+  <script src="./alpine.js?v=0.0.0"></script>
 </html>

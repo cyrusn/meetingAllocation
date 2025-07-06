@@ -11,7 +11,8 @@ const {
   checkParticipantsAvailability,
   checkPrefilledMeetings,
   findDiffs,
-  flattenTeachers
+  flattenTeachers,
+  printView
 } = require('./helpers.js')
 
 const COMPARE_VERSION = process.env['COMPARE_VERSION']
@@ -40,7 +41,7 @@ const main = async () => {
   )
   const principalsMeetings = rawPrincipalMeetings.map((m) => {
     const { name, meetings } = m
-    return { name, meetings: meetings.split(',\n') }
+    return { name, meetings: meetings.split(/,|\n/).filter((a) => a) }
   })
   const prefilledMeetings = await getSheetData(
     SPREADSHEET_ID,
@@ -49,25 +50,26 @@ const main = async () => {
   const rawUnavailables = await getSheetData(SPREADSHEET_ID, 'unavailables!A:C')
 
   const meetings = rawMeetings.map((r) => {
-    const { name, cname, pics, members, duration, location } = r
+    const { name, cname, pics, members, duration, location, remark } = r
     return {
       name,
       cname,
-      pics: pics ? pics.split(',') : [],
-      members: members ? members.split(',') : [],
+      pics: pics ? pics.split(/,|\n/).filter((a) => a) : [],
+      members: members ? members.split(/,|\n/).filter((a) => a) : [],
       duration,
-      location
+      location,
+      remark
     }
   })
 
   const unavailableArrays = rawUnavailables.map((r) => {
     const { teachers, slots, remark } = r
     return {
-      teachers: teachers.split(','),
+      teachers: teachers.split(/,\s*|\n/).filter((a) => a),
       slots: slots
-        .replaceAll('\n', '')
         .replaceAll(' ', '')
-        .split(',')
+        .split(/,|\n/)
+        .filter((a) => a)
         .map((slot) => {
           const [start, end] = slot.split('/')
           return {
@@ -270,6 +272,8 @@ const main = async () => {
     ),
     'utf8'
   )
+
+  await printView(data)
 
   console.log('Assigned meetings: ', assignedSlots.length)
   console.log('Total number of meetings', meetings.length)

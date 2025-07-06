@@ -1,4 +1,4 @@
-const version = 'v0.0.2'
+const version = 'v0.0.0'
 const FILENAME = `result.${version}.json`
 
 const groupBy = function (xs, key) {
@@ -72,6 +72,7 @@ document.addEventListener('alpine:init', () => {
 
       return data
         .filter(({ slot }) => {
+          if (slot == 'TBC') return true
           if (!isShowFutureMeetings) {
             // show events after 3 * 60 * 60 * 1000
             return new Date(slot) - now > -10800000
@@ -93,7 +94,12 @@ document.addEventListener('alpine:init', () => {
       if (!this.meetings.length) return ''
 
       const schedules = this.meetings.map((s) => {
+        if (s.slot == 'TBC') {
+          return Object.assign(s, { date: 'TBC', time: 'TBC' })
+        }
+
         const [date, time] = s.slot.split('T')
+
         return Object.assign(s, { date, time })
       })
 

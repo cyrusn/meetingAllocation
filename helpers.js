@@ -1,6 +1,8 @@
 const { DateTime, Duration, Interval } = require('luxon')
 const _ = require('lodash')
 
+const { batchClearData, appendRows } = require('./googleSheet.js')
+
 // mergePrincipalsToMeetings is a function that merge principals to meetings
 // the result is sExaminations and Assessment Teamorted by the number of members in the meeting
 // and the number of meetings that member in members are in others meetings
@@ -234,10 +236,47 @@ function flattenTeachers(unavailableArrays) {
     }, [])
 }
 
+async function printView(data) {
+  const SPREADSHEET_ID = process.env['SPREADSHEET_ID']
+  await batchClearData(SPREADSHEET_ID, 'result!A:Z')
+  const excelPrintView = [
+    [
+      'Date',
+      'Time',
+      'Venue',
+      'Department/Committee/Team',
+      'Principals',
+      'PICs',
+      'Members'
+    ]
+  ]
+
+  data.forEach(
+    ({ name, location, slot, members, principals, duration, pics, remark }) => {
+      const startDateTime = DateTime.fromISO(slot)
+      const endDateTime = startDateTime.plus({ hour: duration })
+      const date = startDateTime.toFormat('d/M(EEE)')
+      const startTime = startDateTime.toFormat('HH:mm')
+      const endTime = endDateTime.toFormat('HH:mm')
+      excelPrintView.push([
+        date,
+        `${startTime}-${endTime}`,
+        location,
+        name,
+        principals,
+        pics,
+        members
+      ])
+    }
+  )
+  await appendRows(SPREADSHEET_ID, 'result!A:A', excelPrintView)
+}
+
 module.exports = {
   checkParticipantsAvailability,
   mergePrincipalsToMeetings,
   findDiffs,
   checkPrefilledMeetings,
-  flattenTeachers
+  flattenTeachers,
+  printView
 }
