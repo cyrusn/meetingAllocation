@@ -87,14 +87,16 @@ function checkPrefilledMeetings(prefilledMeetings, meetings, unavailables) {
       const teacherUnavailableSlots = unavailables[participant]
       if (teacherUnavailableSlots) {
         teacherUnavailableSlots.forEach((unavailableSlot) => {
-          const { start, end } = unavailableSlot
+          const { start, end, ignoredMeeting } = unavailableSlot
           const intervalC = Interval.fromISO(`${start}/${end}`)
-          if (intervalC.overlaps(intervalA)) {
-            console.error(name, participant, slot, unavailableSlot)
-            throw new Error(
-              'Prefilled meetings is not available for some teachers'
-            )
-          }
+
+          if (!intervalC.overlaps(intervalA)) return
+          if (ignoredMeeting == name) return
+
+          console.error(name, participant, slot, unavailableSlot)
+          throw new Error(
+            'Prefilled meetings is not available for some teachers'
+          )
         })
       }
 
@@ -129,7 +131,8 @@ function checkParticipantsAvailability({
   unavailables,
   slot,
   participants,
-  duration
+  duration,
+  meetingName
 }) {
   const notAvailabeParticipants = []
   // check if every participant is available
@@ -147,17 +150,17 @@ function checkParticipantsAvailability({
     }
 
     const unavailableIntervals = participantUnavailableSchedules.map(
-      ({ start, end }) => {
+      ({ start, end, ingoredMeeting }) => {
         const interval = new Interval({
           start: DateTime.fromISO(start),
           end: DateTime.fromISO(end)
         })
-        return interval
+        return { interval, ingoredMeeting }
       }
     )
 
     const isOk = unavailableIntervals.every(
-      (unavailableInterval) => !unavailableInterval.overlaps(interval)
+      (i) => !(i.interval.overlaps(interval) && i.ignoredMeeting != meetingName)
     )
 
     if (isOk) return true
@@ -226,7 +229,8 @@ function flattenTeachers(unavailableArrays) {
           teacher,
           start: s.start,
           end: s.end,
-          remark: s.remark
+          remark: s.remark,
+          ignoredMeeting: s.ignoredMeeting
         }))
         prev = prev.concat(flatten)
         return prev
@@ -251,22 +255,48 @@ async function printView(data) {
     ]
   ]
 
+  let currentDate = ''
+  let currentTime = ''
+
   data.forEach(
-    ({ name, location, slot, members, principals, duration, pics, remark }) => {
+    (
+      {
+        name,
+        cname,
+        location,
+        slot,
+        members,
+        principals,
+        duration,
+        pics,
+        remark
+      },
+      n
+    ) => {
       const startDateTime = DateTime.fromISO(slot)
       const endDateTime = startDateTime.plus({ hour: duration })
       const date = startDateTime.toFormat('d/M(EEE)')
       const startTime = startDateTime.toFormat('HH:mm')
       const endTime = endDateTime.toFormat('HH:mm')
+      const mTime = `${startTime}-${endTime}`
+
       excelPrintView.push([
-        date,
-        `${startTime}-${endTime}`,
+        currentDate == date ? '' : date,
+        currentTime == mTime ? '' : mTime,
         location,
-        name,
-        principals,
-        pics,
-        members
+        `${cname}\n${name}` + (remark ? `\n(${remark})` : ''),
+        principals.join(', '),
+        pics.join(', '),
+        members.join(', ')
       ])
+
+      if (currentDate != date) {
+        currentDate = date
+      }
+
+      if (currentTime != mTime) {
+        currentTime = mTime
+      }
     }
   )
   await appendRows(SPREADSHEET_ID, 'result!A:A', excelPrintView)

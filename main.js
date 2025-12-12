@@ -47,7 +47,7 @@ const main = async () => {
     SPREADSHEET_ID,
     'prefilledMeetings!A:C'
   )
-  const rawUnavailables = await getSheetData(SPREADSHEET_ID, 'unavailables!A:C')
+  const rawUnavailables = await getSheetData(SPREADSHEET_ID, 'unavailables!A:D')
 
   const meetings = rawMeetings.map((r) => {
     const { name, cname, pics, members, duration, location, remark } = r
@@ -63,7 +63,8 @@ const main = async () => {
   })
 
   const unavailableArrays = rawUnavailables.map((r) => {
-    const { teachers, slots, remark } = r
+    const { teachers, slots, remark, ignoredMeeting } = r
+    // console.log(ignoredMeeting)
     return {
       teachers: teachers.split(/,\s*|\n/).filter((a) => a),
       slots: slots
@@ -75,7 +76,8 @@ const main = async () => {
           return {
             start,
             end,
-            remark
+            remark,
+            ignoredMeeting
           }
         })
     }
@@ -115,7 +117,8 @@ const main = async () => {
         unavailables,
         slot,
         participants,
-        duration
+        duration,
+        name: found.name
       })
 
     if (!isAllAvailable) {
