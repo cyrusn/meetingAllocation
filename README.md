@@ -33,7 +33,7 @@ node main.js
     location: "",
     remark: "",
   },
-];
+]
 ```
 
 ```js
@@ -44,5 +44,5 @@ node main.js
   "STEAM Education Coordination Team",
   "Curriculum Development Team",
   "KLA - Science and Laboratory Safety Team",
-];
+]
 ```

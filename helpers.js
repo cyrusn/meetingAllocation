@@ -87,11 +87,14 @@ function checkPrefilledMeetings(prefilledMeetings, meetings, unavailables) {
       const teacherUnavailableSlots = unavailables[participant]
       if (teacherUnavailableSlots) {
         teacherUnavailableSlots.forEach((unavailableSlot) => {
+          // if (participant == 'KMC') {
+          //   console.log(unavailableSlot, name)
+          // }
           const { start, end, ignoredMeeting } = unavailableSlot
           const intervalC = Interval.fromISO(`${start}/${end}`)
 
           if (!intervalC.overlaps(intervalA)) return
-          if (ignoredMeeting == name) return
+          if (ignoredMeeting == name && ignoredMeeting) return
 
           console.error(name, participant, slot, unavailableSlot)
           throw new Error(
@@ -141,7 +144,10 @@ function checkParticipantsAvailability({
       hours: duration
     })
 
-    const interval = Interval.after(DateTime.fromISO(slot), formattedDuration)
+    const meetingInterval = Interval.after(
+      DateTime.fromISO(slot),
+      formattedDuration
+    )
 
     const participantUnavailableSchedules = unavailables[participant]
 
@@ -150,18 +156,20 @@ function checkParticipantsAvailability({
     }
 
     const unavailableIntervals = participantUnavailableSchedules.map(
-      ({ start, end, ingoredMeeting }) => {
+      ({ start, end, ignoredMeeting }) => {
         const interval = new Interval({
           start: DateTime.fromISO(start),
           end: DateTime.fromISO(end)
         })
-        return { interval, ingoredMeeting }
+        return { interval, ignoredMeeting }
       }
     )
 
-    const isOk = unavailableIntervals.every(
-      (i) => !(i.interval.overlaps(interval) && i.ignoredMeeting != meetingName)
-    )
+    const isOk = unavailableIntervals.every(({ interval, ignoredMeeting }) => {
+      return !(
+        interval.overlaps(meetingInterval) && ignoredMeeting != meetingName
+      )
+    })
 
     if (isOk) return true
 
@@ -259,20 +267,17 @@ async function printView(data) {
   let currentTime = ''
 
   data.forEach(
-    (
-      {
-        name,
-        cname,
-        location,
-        slot,
-        members,
-        principals,
-        duration,
-        pics,
-        remark
-      },
-      n
-    ) => {
+    ({
+      name,
+      cname,
+      location,
+      slot,
+      members,
+      principals,
+      duration,
+      pics,
+      remark
+    }) => {
       const startDateTime = DateTime.fromISO(slot)
       const endDateTime = startDateTime.plus({ hour: duration })
       const date = startDateTime.toFormat('d/M(EEE)')

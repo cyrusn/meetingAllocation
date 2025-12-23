@@ -118,7 +118,7 @@ const main = async () => {
         slot,
         participants,
         duration,
-        name: found.name
+        meetingName: found.name
       })
 
     if (!isAllAvailable) {
@@ -168,7 +168,8 @@ const main = async () => {
         unavailables,
         slot,
         participants,
-        duration
+        duration,
+        meetingName: name
       })
 
       // check in a certain slot, if any participants is already assigned to a meetings
@@ -237,7 +238,14 @@ const main = async () => {
   }
 
   // assign locations for all meetings
-  for (const { name, location, slot, members, principals } of assignedSlots) {
+  for (const {
+    name,
+    location,
+    slot,
+    members,
+    pics,
+    principals
+  } of assignedSlots) {
     if (location) continue
 
     const assignedLocations = assignedSlots
@@ -248,7 +256,7 @@ const main = async () => {
       if (assignedLocations.includes(location)) continue
 
       // The G10's capacity should not exceed G10 Capacity.
-      const participants = _.uniq([...members, ...principals])
+      const participants = _.uniq([...members, ...principals, ...pics])
       if (participants.length > g10Capacity && location == 'G10') continue
 
       assignedSlots.find((s) => s.name == name).location = location

@@ -1,4 +1,4 @@
-const version = 'v0.0.0'
+const version = 'v0.0.3'
 const FILENAME = `result.${version}.json`
 
 const groupBy = function (xs, key) {
