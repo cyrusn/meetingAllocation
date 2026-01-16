@@ -10,7 +10,9 @@
     "luxon": "^3.3.0"
   },
   "scripts": {
-    "build": "node main.js"
+    "start": "node v2/main.js",
+    "build": "node v2/main.js",
+    "test": "node v2/tests/scheduler.test.js"
   },
   "eslintConfig": {
     "env": {
