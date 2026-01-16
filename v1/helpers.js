@@ -183,9 +183,14 @@ function checkParticipantsAvailability({
   }
 }
 
+const fs = require('fs')
+
 function findDiffs(data, path) {
   try {
-    const file = require(path)
+    if (!fs.existsSync(path)) return []
+    const fileContent = fs.readFileSync(path, 'utf8')
+    const file = JSON.parse(fileContent)
+    
     const diffs = []
 
     data.forEach((meeting, index) => {
